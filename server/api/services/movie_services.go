@@ -3,17 +3,17 @@ package services
 import (
 	"context"
 	"fmt"
-	"github.com/IsaacCooke/MovieApp/api/data"
-	"github.com/IsaacCooke/MovieApp/api/models"
+	"github.com/IsaacCooke/MovieApp/data/drivers"
+	models2 "github.com/IsaacCooke/MovieApp/data/models"
 	"github.com/graphql-go/graphql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"log"
 )
 
 var getAllMovies = &graphql.Field{
-	Type: graphql.NewList(models.MovieType),
+	Type: graphql.NewList(models2.MovieType),
 	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-		configuration := data.ParseConfiguration()
+		configuration := drivers.ParseConfiguration()
 		driver, err := configuration.NewDriver()
 		if err != nil {
 			log.Fatal(err)
@@ -45,8 +45,8 @@ var getAllMovies = &graphql.Field{
 			if err != nil {
 				return nil, err
 			}
-			var result []models.Movie
-			currentMovie := models.Movie{}
+			var result []models2.Movie
+			currentMovie := models2.Movie{}
 			for records.Next(ctx) {
 				record := records.Record()
 				title, _ := record.Get("title")
@@ -57,13 +57,13 @@ var getAllMovies = &graphql.Field{
 					if currentMovie.Title != "" {
 						result = append(result, currentMovie)
 					}
-					currentMovie = models.Movie{Title: title.(string)}
+					currentMovie = models2.Movie{Title: title.(string)}
 				}
 				switch role.(type) {
 				case []interface{}:
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string), Role: data.ToStringSlice(role.([]interface{}))})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string), Role: drivers.ToStringSlice(role.([]interface{}))})
 				default: // handle nulls or unexpected stuff
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string)})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string)})
 				}
 			}
 			if currentMovie.Title != "" {
@@ -79,7 +79,7 @@ var getAllMovies = &graphql.Field{
 }
 
 var getMovieByTitle = &graphql.Field{
-	Type: models.MovieType,
+	Type: models2.MovieType,
 	Args: graphql.FieldConfigArgument{
 		"title": &graphql.ArgumentConfig{
 			Type: graphql.String,
@@ -88,7 +88,7 @@ var getMovieByTitle = &graphql.Field{
 	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 		title := params.Args["title"].(string)
 
-		configuration := data.ParseConfiguration()
+		configuration := drivers.ParseConfiguration()
 		driver, err := configuration.NewDriver()
 		if err != nil {
 			log.Fatal(err)
@@ -121,7 +121,7 @@ var getMovieByTitle = &graphql.Field{
 			if err != nil {
 				return nil, err
 			}
-			var result models.Movie
+			var result models2.Movie
 			for records.Next(ctx) {
 				record := records.Record()
 				title, _ := record.Get("title")
@@ -131,9 +131,9 @@ var getMovieByTitle = &graphql.Field{
 				role, _ := record.Get("role")
 				switch role.(type) {
 				case []interface{}:
-					result.Cast = append(result.Cast, models.Person{Name: name.(string), Job: job.(string), Role: data.ToStringSlice(role.([]interface{}))})
+					result.Cast = append(result.Cast, models2.Person{Name: name.(string), Job: job.(string), Role: drivers.ToStringSlice(role.([]interface{}))})
 				default: // handle nulls or unexpected stuff
-					result.Cast = append(result.Cast, models.Person{Name: name.(string), Job: job.(string)})
+					result.Cast = append(result.Cast, models2.Person{Name: name.(string), Job: job.(string)})
 				}
 			}
 			return result, nil
@@ -146,7 +146,7 @@ var getMovieByTitle = &graphql.Field{
 }
 
 var moviesWithinThreeRelations = &graphql.Field{
-	Type: graphql.NewList(models.MovieType),
+	Type: graphql.NewList(models2.MovieType),
 	Args: graphql.FieldConfigArgument{
 		"title": &graphql.ArgumentConfig{
 			Type: graphql.String,
@@ -155,7 +155,7 @@ var moviesWithinThreeRelations = &graphql.Field{
 	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 		title := params.Args["title"].(string)
 
-		configuration := data.ParseConfiguration()
+		configuration := drivers.ParseConfiguration()
 		driver, err := configuration.NewDriver()
 		if err != nil {
 			log.Fatal(err)
@@ -187,8 +187,8 @@ var moviesWithinThreeRelations = &graphql.Field{
 			if err != nil {
 				return nil, err
 			}
-			var result []models.Movie
-			currentMovie := models.Movie{}
+			var result []models2.Movie
+			currentMovie := models2.Movie{}
 			for records.Next(ctx) {
 				record := records.Record()
 				title, _ := record.Get("title")
@@ -199,13 +199,13 @@ var moviesWithinThreeRelations = &graphql.Field{
 					if currentMovie.Title != "" {
 						result = append(result, currentMovie)
 					}
-					currentMovie = models.Movie{Title: title.(string)}
+					currentMovie = models2.Movie{Title: title.(string)}
 				}
 				switch role.(type) {
 				case []interface{}:
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string), Role: data.ToStringSlice(role.([]interface{}))})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string), Role: drivers.ToStringSlice(role.([]interface{}))})
 				default: // handle nulls or unexpected stuff
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string)})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string)})
 				}
 			}
 			if currentMovie.Title != "" {
@@ -221,7 +221,7 @@ var moviesWithinThreeRelations = &graphql.Field{
 }
 
 var moviesByDirector = &graphql.Field{
-	Type: graphql.NewList(models.MovieType),
+	Type: graphql.NewList(models2.MovieType),
 	Args: graphql.FieldConfigArgument{
 		"name": &graphql.ArgumentConfig{
 			Type: graphql.String,
@@ -230,7 +230,7 @@ var moviesByDirector = &graphql.Field{
 	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 		name := params.Args["name"].(string)
 
-		configuration := data.ParseConfiguration()
+		configuration := drivers.ParseConfiguration()
 		driver, err := configuration.NewDriver()
 		if err != nil {
 			log.Fatal(err)
@@ -261,8 +261,8 @@ var moviesByDirector = &graphql.Field{
 			if err != nil {
 				return nil, err
 			}
-			var result []models.Movie
-			currentMovie := models.Movie{}
+			var result []models2.Movie
+			currentMovie := models2.Movie{}
 			for records.Next(ctx) {
 				record := records.Record()
 				title, _ := record.Get("title")
@@ -273,13 +273,13 @@ var moviesByDirector = &graphql.Field{
 					if currentMovie.Title != "" {
 						result = append(result, currentMovie)
 					}
-					currentMovie = models.Movie{Title: title.(string)}
+					currentMovie = models2.Movie{Title: title.(string)}
 				}
 				switch role.(type) {
 				case []interface{}:
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string), Role: data.ToStringSlice(role.([]interface{}))})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string), Role: drivers.ToStringSlice(role.([]interface{}))})
 				default: // handle nulls or unexpected stuff
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string)})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string)})
 				}
 			}
 			if currentMovie.Title != "" {
@@ -295,7 +295,7 @@ var moviesByDirector = &graphql.Field{
 }
 
 var moviesByActor = &graphql.Field{
-	Type: graphql.NewList(models.MovieType),
+	Type: graphql.NewList(models2.MovieType),
 	Args: graphql.FieldConfigArgument{
 		"name": &graphql.ArgumentConfig{
 			Type: graphql.String,
@@ -304,7 +304,7 @@ var moviesByActor = &graphql.Field{
 	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 		name := params.Args["name"].(string)
 
-		configuration := data.ParseConfiguration()
+		configuration := drivers.ParseConfiguration()
 		driver, err := configuration.NewDriver()
 		if err != nil {
 			log.Fatal(err)
@@ -333,8 +333,8 @@ var moviesByActor = &graphql.Field{
 			if err != nil {
 				return nil, err
 			}
-			var result []models.Movie
-			currentMovie := models.Movie{}
+			var result []models2.Movie
+			currentMovie := models2.Movie{}
 			for records.Next(ctx) {
 				record := records.Record()
 				title, _ := record.Get("title")
@@ -345,17 +345,17 @@ var moviesByActor = &graphql.Field{
 					if currentMovie.Title != "" {
 						result = append(result, currentMovie)
 					}
-					currentMovie = models.Movie{Title: title.(string)}
+					currentMovie = models2.Movie{Title: title.(string)}
 				}
 				switch role.(type) {
 				case []interface{}:
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{
 						Job:  job.(string),
-						Role: data.ToStringSlice(role.([]interface{})),
+						Role: drivers.ToStringSlice(role.([]interface{})),
 						Name: name.(string),
 					})
 				default:
-					currentMovie.Cast = append(currentMovie.Cast, models.Person{Name: name.(string), Job: job.(string)})
+					currentMovie.Cast = append(currentMovie.Cast, models2.Person{Name: name.(string), Job: job.(string)})
 				}
 			}
 			if currentMovie.Title != "" {
